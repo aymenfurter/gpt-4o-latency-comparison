@@ -20,7 +20,16 @@
   <img src="assets/preview.png" alt="Benchmark Preview" width="800"/>
 </p>
 
-## 🚀 Why This Matters
+## Table of Contents
+- [Introduction](#introduction)
+- [Key Metrics](#key-metrics)
+- [Benchmark Results](#benchmark-results)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Technical Implementation](#technical-implementation)
+- [Acknowledgements](#acknowledgements)
+
+## Introduction
 
 Azure OpenAI Service now offers multiple ways to implement GPT-4o with audio capabilities:
 
@@ -30,7 +39,7 @@ Azure OpenAI Service now offers multiple ways to implement GPT-4o with audio cap
 
 Each implementation offers different tradeoffs between **latency**, **audio quality**, and **implementation complexity**. This toolkit helps you quantify these differences to choose the best option for your specific use case.
 
-## 🔍 What We Measure
+## Key Metrics
 
 This benchmarking suite captures critical metrics across all GPT-4o audio implementations:
 
@@ -39,7 +48,7 @@ This benchmarking suite captures critical metrics across all GPT-4o audio implem
 | **Time to Audio Playback** | How long until the first audio would begin playing | Critical for real-time applications and user experience |
 | **Audio Duration** | Length of the generated audio in seconds | Indicates speech rate and information density |
 
-## 🖥️ Benchmark Sample Results
+## Benchmark Results
 
 The Benchmark results vary dramatically based on the input prompt used. Here is a sample result for the provided default prompt:
 
@@ -53,7 +62,7 @@ Our interactive Gradio interface allows you to:
 - Visualize performance differences with detailed charts
 - Listen to audio samples to evaluate quality differences
 
-## 🔧 Installation
+## Installation
 
 1. Clone the repository:
 ```bash
@@ -89,7 +98,7 @@ GPT4O_AUDIO_DEPLOYMENT=your-gpt4o-audio-preview-deployment-name
 TTS_DEPLOYMENT=your-tts-deployment-name
 ```
 
-## 🚀 Usage
+## Usage
 
 1. Start the benchmarking interface:
 ```bash
@@ -100,7 +109,7 @@ python app.py
 
 3. Enter a prompt, select the desired models, set the number of iterations, and click "Run Benchmark"
 
-## 📋 How It Works
+## Technical Implementation
 
 This toolkit uses a structured benchmarking approach:
 
@@ -115,7 +124,7 @@ The benchmarking is performed through these key components:
 - `utils/` - Helper functions for metrics collection and analysis
 - `app.py` - Gradio interface for interactive testing
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [OpenAI](https://openai.com/) and [Microsoft Azure](https://azure.microsoft.com/) for providing the GPT-4o APIs
 - [Gradio](https://gradio.app/) for the interactive interface components
