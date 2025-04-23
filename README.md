@@ -1,23 +1,63 @@
 # GPT-4o Latency Comparison
 
-A benchmarking toolkit for comparing performance metrics between different GPT-4o implementations:
-- GPT-4o Realtime
-- GPT-4o Audio Preview
-- GPT-4o + Whisper TTS
+<p align="center">
+  <img src="assets/logo.png" alt="GPT-4o Latency Comparison Logo" width="200"/>
+</p>
 
-## Features
+<p align="center">
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/stargazers"><img src="https://img.shields.io/github/stars/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Stars Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/network/members"><img src="https://img.shields.io/github/forks/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Forks Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/pulls"><img src="https://img.shields.io/github/issues-pr/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Pull Requests Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/issues"><img src="https://img.shields.io/github/issues/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Issues Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/blob/main/LICENSE"><img src="https://img.shields.io/github/license/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="License Badge"/></a>
+</p>
 
-- Compare response times across different models
-- Measure and visualize time to audio playback start
-- Track token generation rates
-- Analyze audio durations
-- Interactive web interface using Gradio
+<p align="center">
+  <b>Benchmarking toolkit for measuring real-world latency of GPT-4o audio implementations</b>
+</p>
 
-## Installation
+<p align="center">
+  <img src="assets/preview.png" alt="Benchmark Preview" width="800"/>
+</p>
+
+## 🚀 Why This Matters
+
+Azure OpenAI Service now offers multiple ways to implement GPT-4o with audio capabilities:
+
+- **GPT-4o Realtime** - Streaming text and audio responses with minimal latency
+- **GPT-4o Audio Preview** - Integrated text and speech in a single API call
+- **GPT-4o + Whisper TTS** - Sequential text generation and separate speech synthesis
+
+Each implementation offers different tradeoffs between **latency**, **audio quality**, and **implementation complexity**. This toolkit helps you quantify these differences to choose the best option for your specific use case.
+
+## 🔍 What We Measure
+
+This benchmarking suite captures critical metrics across all GPT-4o audio implementations:
+
+| Metric | Description | Why It Matters |
+|--------|-------------|----------------|
+| **Time to Audio Playback** | How long until the first audio would begin playing | Critical for real-time applications and user experience |
+| **Audio Duration** | Length of the generated audio in seconds | Indicates speech rate and information density |
+
+## 🖥️ Benchmark Sample Results
+
+The Benchmark results vary dramatically based on the input prompt used. Here is a sample result for the provided default prompt:
+
+<p align="center">
+  <img src="assets/demo.png" alt="Demo of the benchmarking interface" width="600"/>
+</p>
+
+Our interactive Gradio interface allows you to:
+- Compare multiple models side-by-side
+- Run multi-iteration benchmarks for statistical reliability
+- Visualize performance differences with detailed charts
+- Listen to audio samples to evaluate quality differences
+
+## 🔧 Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/gpt-4o-latency-comparison.git
+git clone https://github.com/aymenfurter/gpt-4o-latency-comparison.git
 cd gpt-4o-latency-comparison
 ```
 
@@ -44,12 +84,12 @@ AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
 AZURE_OPENAI_API_KEY=your-api-key-here
 AZURE_OPENAI_API_VERSION=2025-01-01-preview
 GPT4O_DEPLOYMENT=your-gpt4o-deployment-name
-GPT4O_REALTIME_DEPLOYMENT=your-gpt4o-realtime-deployment-name
-GPT4O_AUDIO_DEPLOYMENT=your-gpt4o-audio-deployment-name
+GPT4O_REALTIME_DEPLOYMENT=your-gpt4o-realtime-preview-deployment-name
+GPT4O_AUDIO_DEPLOYMENT=your-gpt4o-audio-preview-deployment-name
 TTS_DEPLOYMENT=your-tts-deployment-name
 ```
 
-## Usage
+## 🚀 Usage
 
 1. Start the benchmarking interface:
 ```bash
@@ -60,32 +100,23 @@ python app.py
 
 3. Enter a prompt, select the desired models, set the number of iterations, and click "Run Benchmark"
 
-4. Explore the results with interactive charts and audio samples
+## 📋 How It Works
 
-## Metrics Explained
+This toolkit uses a structured benchmarking approach:
 
-- **Time Until Audio Playback Start**: How long it takes from sending the request until audio would begin playing
-  - For GPT-4o Realtime: Time until the first token is received
-  - For GPT-4o Audio: Total processing time until audio is returned
-  - For GPT-4o + Whisper TTS: Combined time for text generation and TTS processing
+1. **Isolation**: Each model is tested independently to prevent interference
+2. **Multiple Iterations**: Running repeated tests reduces the impact of network/service variability
+3. **Comparable Metrics**: All models measure the same core performance indicators
+4. **Audio Analysis**: FFmpeg and pydub are used for detailed audio file analysis
 
-- **Generated Audio Duration**: Actual length of the generated audio in seconds
+The benchmarking is performed through these key components:
+- `benchmark_runner.py` - Orchestrates the testing process
+- `models/` - Implementation classes for each GPT-4o variant
+- `utils/` - Helper functions for metrics collection and analysis
+- `app.py` - Gradio interface for interactive testing
 
-- **Tokens Per Second**: Text token generation speed
+## 🙏 Acknowledgements
 
-## Dependencies
-
-- openai
-- pydub
-- ffmpeg (for audio duration analysis)
-- gradio
-- pandas
-- plotly
-- azure-identity
-- python-dotenv
-
-## Notes
-
-- FFmpeg is required for accurate MP3 duration detection in the GPT-4o + Whisper TTS model.
-- The benchmark computes an average across the specified number of iterations for more reliable results.
-- When comparing models, consider both speed (time to audio start) and quality (tokens per second).
+- [OpenAI](https://openai.com/) and [Microsoft Azure](https://azure.microsoft.com/) for providing the GPT-4o APIs
+- [Gradio](https://gradio.app/) for the interactive interface components
+- [FFmpeg](https://ffmpeg.org/) for audio analysis capabilities
