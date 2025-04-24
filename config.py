@@ -72,6 +72,15 @@ except ValueError:
         "Invalid BENCHMARK_PAUSE_SECONDS value, using default of 10.0")
     BENCHMARK_PAUSE_SECONDS = 10.0
 
+# Pause between iterations within a benchmark (in seconds)
+try:
+    ITERATION_PAUSE_SECONDS = float(
+        os.getenv("ITERATION_PAUSE_SECONDS", "1.0"))
+except ValueError:
+    logging.warning(
+        "Invalid ITERATION_PAUSE_SECONDS value, using default of 1.0")
+    ITERATION_PAUSE_SECONDS = 1.0
+
 # Maximum token limit for benchmarks
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "1000"))
 

@@ -16,7 +16,7 @@ import gradio as gr
 from typing import List, Dict, Any, Tuple, Optional
 
 from benchmark_runner import BenchmarkRunner
-from config import DEFAULT_PROMPT, BENCHMARK_ITERATIONS, BENCHMARK_PAUSE_SECONDS, APP_PORT, SHARE_APP
+from config import DEFAULT_PROMPT, BENCHMARK_ITERATIONS, BENCHMARK_PAUSE_SECONDS, ITERATION_PAUSE_SECONDS, APP_PORT, SHARE_APP
 from utils.exceptions import BenchmarkError
 
 # Configure logger
@@ -515,6 +515,7 @@ async def run_benchmark(
     include_azure_speech: bool,
     include_gpt41_mini_whisper: bool,
     pause_seconds: float = BENCHMARK_PAUSE_SECONDS,
+    iteration_pause: float = ITERATION_PAUSE_SECONDS,
     progress=gr.Progress()
 ) -> Tuple:
     """
@@ -529,15 +530,18 @@ async def run_benchmark(
         include_azure_speech: Whether to include the Azure Speech model
         include_gpt41_mini_whisper: Whether to include the GPT-4.1-mini + Whisper model
         pause_seconds: Number of seconds to pause between model benchmarks
+        iteration_pause: Number of seconds to pause between iterations
         progress: Gradio progress indicator
 
     Returns:
         Tuple containing benchmark results and visualizations
     """
     # Update the pause seconds in config for this run
-    global BENCHMARK_PAUSE_SECONDS
+    global BENCHMARK_PAUSE_SECONDS, ITERATION_PAUSE_SECONDS
     original_pause = BENCHMARK_PAUSE_SECONDS
+    original_iteration_pause = ITERATION_PAUSE_SECONDS
     BENCHMARK_PAUSE_SECONDS = pause_seconds
+    ITERATION_PAUSE_SECONDS = iteration_pause
 
     # Determine which models to benchmark
     selected_models = []
@@ -564,7 +568,8 @@ async def run_benchmark(
         summary_df, detailed_metrics, audio_samples = await benchmark_runner.run_benchmark(
             prompt=prompt,
             iterations=iterations,
-            selected_models=selected_models
+            selected_models=selected_models,
+            iteration_pause=iteration_pause
         )
 
         progress(0.8, desc="Generating charts...")
@@ -615,8 +620,9 @@ async def run_benchmark(
         logger.error(f"Unexpected error: {e}", exc_info=True)
         return (f"An unexpected error occurred: {str(e)}", None, None, None, None, None, None, None, None, None)
     finally:
-        # Restore original pause setting
+        # Restore original settings
         BENCHMARK_PAUSE_SECONDS = original_pause
+        ITERATION_PAUSE_SECONDS = original_iteration_pause
 
 
 def create_gradio_interface() -> gr.Blocks:
@@ -632,8 +638,8 @@ def create_gradio_interface() -> gr.Blocks:
         Compare performance metrics across different GPT-4o model variants:
         - GPT-4o Realtime: Streaming text and audio (currently text-in, audio-out only)
         - GPT-4o Audio Preview: Integrated text and speech in one call
-        - GPT-4o + Whisper TTS: Sequential text generation and speech synthesis
-        - GPT-4.1-mini + Whisper TTS: Using GPT-4.1-mini for text generation with Whisper TTS
+        - GPT-4o + Whisper + TTS: Sequential text generation and speech synthesis
+        - GPT-4.1-mini + Whisper + TTS: Using GPT-4.1-mini for text generation
         - Azure Speech + OpenAI: Using Azure Speech Services for STT and TTS
         """)
 
@@ -661,6 +667,14 @@ def create_gradio_interface() -> gr.Blocks:
                         maximum=30,
                         value=BENCHMARK_PAUSE_SECONDS,
                         step=1
+                    )
+
+                    iteration_pause_input = gr.Slider(
+                        label="Pause Between Iterations (seconds)",
+                        minimum=0,
+                        maximum=10,
+                        value=ITERATION_PAUSE_SECONDS,
+                        step=0.5
                     )
 
                 with gr.Row():
@@ -743,7 +757,8 @@ def create_gradio_interface() -> gr.Blocks:
                 include_gpt4o_whisper,
                 include_azure_speech,
                 include_gpt41_mini_whisper,
-                pause_input
+                pause_input,
+                iteration_pause_input
             ],
             outputs=[
                 summary_table,

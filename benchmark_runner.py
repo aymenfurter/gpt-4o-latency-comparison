@@ -20,6 +20,7 @@ from config import (
     DEFAULT_PROMPT,
     BENCHMARK_ITERATIONS,
     BENCHMARK_PAUSE_SECONDS,
+    ITERATION_PAUSE_SECONDS,
     AZURE_OPENAI_ENDPOINT,
     AZURE_OPENAI_API_KEY,
     AZURE_OPENAI_API_VERSION,
@@ -114,7 +115,8 @@ class BenchmarkRunner:
     async def run_benchmark(self,
                             prompt: Optional[str] = None,
                             iterations: Optional[int] = None,
-                            selected_models: Optional[List[str]] = None) -> Tuple[pd.DataFrame, Dict[str, List[Dict[str, Any]]], Dict[str, bytes]]:
+                            selected_models: Optional[List[str]] = None,
+                            iteration_pause: Optional[float] = None) -> Tuple[pd.DataFrame, Dict[str, List[Dict[str, Any]]], Dict[str, bytes]]:
         """
         Run benchmarks for selected models with the given prompt.
 
@@ -122,6 +124,7 @@ class BenchmarkRunner:
             prompt: Text prompt to use for benchmarking (uses DEFAULT_PROMPT if None)
             iterations: Number of iterations to run (uses BENCHMARK_ITERATIONS if None)
             selected_models: List of model keys to benchmark (or None for all)
+            iteration_pause: Number of seconds to pause between iterations (uses ITERATION_PAUSE_SECONDS if None)
 
         Returns:
             Tuple of (summary DataFrame, detailed metrics dict, audio samples dict)
@@ -129,6 +132,7 @@ class BenchmarkRunner:
         # Set default values
         benchmark_prompt = prompt or DEFAULT_PROMPT
         benchmark_iterations = iterations or BENCHMARK_ITERATIONS
+        pause_between_iterations = iteration_pause if iteration_pause is not None else ITERATION_PAUSE_SECONDS
 
         # Get the models to benchmark
         target_models = self._get_target_models(selected_models)
@@ -146,7 +150,7 @@ class BenchmarkRunner:
         # Run benchmarks for each model
         for i, (model_key, model) in enumerate(target_models.items()):
             logger.info(
-                f"Benchmarking {model.name} ({iterations} iterations)...")
+                f"Benchmarking {model.name} ({benchmark_iterations} iterations)...")
             model_metrics = []
 
             # Add a pause between models (except before the first model)
@@ -175,6 +179,12 @@ class BenchmarkRunner:
                         all_audio[model_key] = audio
 
                     logger.debug(f"  Completed with metrics: {metrics}")
+
+                    # Add a pause between iterations (except after the last iteration)
+                    if i < benchmark_iterations - 1 and pause_between_iterations > 0:
+                        logger.debug(
+                            f"  Pausing for {pause_between_iterations}s before next iteration...")
+                        await asyncio.sleep(pause_between_iterations)
 
                 except Exception as e:
                     logger.error(
