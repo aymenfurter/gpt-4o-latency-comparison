@@ -1,3 +1,4 @@
+azure-cognitiveservices-speech>=1.32.0
 openai>=1.13.0
 openai[realtime]
 gradio>=4.0.0

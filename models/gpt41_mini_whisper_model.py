@@ -17,7 +17,7 @@ from config import (
     AZURE_OPENAI_ENDPOINT,
     AZURE_OPENAI_API_KEY,
     AZURE_OPENAI_API_VERSION,
-    GPT4O_DEPLOYMENT,
+    GPT41_MINI_DEPLOYMENT,
     TTS_DEPLOYMENT,
     WHISPER_DEPLOYMENT
 )
@@ -26,17 +26,17 @@ from config import (
 logger = logging.getLogger(__name__)
 
 
-class GPT4OWhisperModel(BaseModel):
+class GPT41MiniWhisperModel(BaseModel):
     """
-    GPT-4o with Whisper TTS model implementation.
+    GPT-4.1-mini with Whisper TTS model implementation.
 
-    Uses the GPT-4o deployment for text generation and Whisper for text-to-speech.
+    Uses the GPT-4.1-mini deployment for text generation and Whisper for text-to-speech.
     """
 
     def __init__(self):
-        """Initialize the GPT-4o with Whisper TTS model."""
-        super().__init__("GPT-4o + Whisper TTS")
-        self.gpt4o_deployment = GPT4O_DEPLOYMENT or "gpt-4o"
+        """Initialize the GPT-4.1-mini with Whisper TTS model."""
+        super().__init__("GPT-4.1-mini + Whisper TTS")
+        self.gpt41_mini_deployment = GPT41_MINI_DEPLOYMENT or "gpt-4.1-mini"
         self.tts_deployment = TTS_DEPLOYMENT or "tts"
         self.whisper_deployment = WHISPER_DEPLOYMENT or "whisper"
 
@@ -51,7 +51,7 @@ class GPT4OWhisperModel(BaseModel):
             self.client = await create_azure_openai_client(AZURE_OPENAI_API_VERSION)
         except Exception as e:
             raise ModelInitializationError(
-                f"Failed to initialize GPT-4o + Whisper model: {e}") from e
+                f"Failed to initialize GPT-4.1-mini + Whisper model: {e}") from e
 
     async def _get_tts_headers(self) -> Dict[str, str]:
         """
@@ -81,7 +81,7 @@ class GPT4OWhisperModel(BaseModel):
 
     async def generate_response_from_audio(self, audio_data: bytes, text_prompt: Optional[str] = None) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
         """
-        Generate a response for audio input, with Whisper transcription, GPT-4o processing, and TTS.
+        Generate a response for audio input, with Whisper transcription, GPT-4.1-mini processing, and TTS.
 
         Args:
             audio_data: The input audio data (WAV format)
@@ -125,13 +125,13 @@ class GPT4OWhisperModel(BaseModel):
             else:
                 full_prompt = f"Respond to this transcribed audio: {transcription}"
 
-            # Step 2: Generate text response with GPT-4o
+            # Step 2: Generate text response with GPT-4.1-mini
             logger.debug(
-                f"Generating text response with {self.gpt4o_deployment}")
+                f"Generating text response with {self.gpt41_mini_deployment}")
             gpt_start_time = time.time()
 
             response = await self.client.chat.completions.create(
-                model=self.gpt4o_deployment,
+                model=self.gpt41_mini_deployment,
                 messages=[{"role": "user", "content": full_prompt}],
                 stream=False
             )
@@ -186,7 +186,7 @@ class GPT4OWhisperModel(BaseModel):
                 # Whisper transcription metrics
                 "whisper_time": whisper_time,
 
-                # Text generation metrics (the core GPT-4o part)
+                # Text generation metrics (the core GPT-4.1-mini part)
                 "text_generation_time": gpt_time,
 
                 # TTS specific metrics
@@ -215,12 +215,12 @@ class GPT4OWhisperModel(BaseModel):
             )
 
             logger.info(
-                f"Generated GPT-4o + Whisper response in {metrics['processing_time']:.2f}s (from audio input)")
+                f"Generated GPT-4.1-mini + Whisper response in {metrics['processing_time']:.2f}s (from audio input)")
 
             return text_response, metrics, audio_data_output
 
         except Exception as e:
-            error_msg = f"Error with GPT-4o + Whisper (audio input): {str(e)}"
+            error_msg = f"Error with GPT-4.1-mini + Whisper (audio input): {str(e)}"
             logger.error(error_msg, exc_info=True)
 
             # Return error metrics

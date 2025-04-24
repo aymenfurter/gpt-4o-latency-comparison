@@ -1,6 +1,7 @@
 import time
 import base64
 import logging
+import io
 from typing import Dict, Any, Tuple, Optional
 
 from models.base_model import BaseModel
@@ -42,12 +43,13 @@ class GPT4OAudioModel(BaseModel):
             raise ModelInitializationError(
                 f"Failed to initialize GPT-4o Audio model: {e}") from e
 
-    async def generate_response(self, prompt: str) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
+    async def generate_response_from_audio(self, audio_data: bytes, text_prompt: Optional[str] = None) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
         """
-        Generate a response for the given prompt with both text and audio.
+        Generate a response for the given audio input with both text and audio output.
 
         Args:
-            prompt: The input text prompt
+            audio_data: The input audio data (WAV format)
+            text_prompt: Optional text prompt to accompany the audio
 
         Returns:
             Tuple containing text response, metrics, and audio data
@@ -59,7 +61,29 @@ class GPT4OAudioModel(BaseModel):
         start_time = time.time()
 
         try:
-            # Make the audio chat completions request
+            # Encode audio data to base64
+            encoded_audio = base64.b64encode(audio_data).decode('utf-8')
+
+            # Prepare content array with audio and optional text
+            content = []
+
+            # Add text prompt if provided
+            if text_prompt:
+                content.append({
+                    "type": "text",
+                    "text": text_prompt
+                })
+
+            # Add audio content
+            content.append({
+                "type": "input_audio",
+                "input_audio": {
+                    "data": encoded_audio,
+                    "format": "wav"
+                }
+            })
+
+            # Make the audio chat completions request with audio input
             response = await self.client.chat.completions.create(
                 model=self.deployment_name,
                 modalities=["text", "audio"],
@@ -67,7 +91,7 @@ class GPT4OAudioModel(BaseModel):
                 messages=[
                     {
                         "role": "user",
-                        "content": prompt
+                        "content": content
                     }
                 ]
             )
@@ -94,7 +118,8 @@ class GPT4OAudioModel(BaseModel):
                 "audio_duration": audio_duration,
                 "token_count": token_count,
                 "total_tokens": response.usage.total_tokens,
-                "audio_size_bytes": len(audio_data)
+                "audio_size_bytes": len(audio_data),
+                "audio_input_size_bytes": len(audio_data)
             }
 
             # Calculate tokens per second
@@ -103,7 +128,7 @@ class GPT4OAudioModel(BaseModel):
             )
 
             logger.info(
-                f"Generated response with GPT-4o Audio in {processing_time:.2f}s")
+                f"Generated response with GPT-4o Audio in {processing_time:.2f}s (from audio input)")
             return text_response, metrics, audio_data
 
         except Exception as e:
