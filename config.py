@@ -28,6 +28,15 @@ if not AZURE_OPENAI_ENDPOINT:
     logging.warning("AZURE_OPENAI_ENDPOINT environment variable is not set")
 
 # =========================================
+# Azure Speech Services Configuration
+# =========================================
+SPEECH_KEY = os.getenv("SPEECH_KEY")
+SPEECH_REGION = os.getenv("SPEECH_REGION")
+SPEECH_RECOGNITION_LANGUAGE = os.getenv("SPEECH_RECOGNITION_LANGUAGE", "en-US")
+SPEECH_SYNTHESIS_VOICE = os.getenv(
+    "SPEECH_SYNTHESIS_VOICE", "en-US-JennyMultilingualNeural")
+
+# =========================================
 # Model Deployment Names
 # =========================================
 GPT4O_DEPLOYMENT = os.getenv("GPT4O_DEPLOYMENT", "gpt-4o")
@@ -37,6 +46,7 @@ GPT4O_REALTIME_DEPLOYMENT = os.getenv(
 GPT4O_AUDIO_DEPLOYMENT = os.getenv(
     "GPT4O_AUDIO_DEPLOYMENT", "gpt-4o-audio-preview"
 )
+GPT41_MINI_DEPLOYMENT = os.getenv("GPT41_MINI_DEPLOYMENT", "gpt-4.1-mini")
 WHISPER_DEPLOYMENT = os.getenv("WHISPER_DEPLOYMENT", "whisper")
 TTS_DEPLOYMENT = os.getenv("TTS_DEPLOYMENT", "tts")
 
@@ -52,6 +62,15 @@ try:
 except ValueError:
     logging.warning("Invalid BENCHMARK_ITERATIONS value, using default of 3")
     BENCHMARK_ITERATIONS = 3
+
+# Pause between model benchmarks (in seconds)
+try:
+    BENCHMARK_PAUSE_SECONDS = float(
+        os.getenv("BENCHMARK_PAUSE_SECONDS", "10.0"))
+except ValueError:
+    logging.warning(
+        "Invalid BENCHMARK_PAUSE_SECONDS value, using default of 10.0")
+    BENCHMARK_PAUSE_SECONDS = 10.0
 
 # Maximum token limit for benchmarks
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "1000"))

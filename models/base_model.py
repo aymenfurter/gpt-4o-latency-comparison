@@ -15,7 +15,7 @@ class BaseModel(ABC):
     def __init__(self, name: str):
         """
         Initialize the model.
-        
+
         Args:
             name: Human-readable name of the model
         """
@@ -27,28 +27,29 @@ class BaseModel(ABC):
     async def initialize(self) -> None:
         """
         Initialize the model's client and resources.
-        
+
         This method should be called before generate_response.
-        
+
         Raises:
             ModelInitializationError: If initialization fails
         """
         pass
 
     @abstractmethod
-    async def generate_response(self, prompt: str) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
+    async def generate_response_from_audio(self, audio_data: bytes, text_prompt: Optional[str] = None) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
         """
-        Generate a response for the given prompt.
+        Generate a response for the given audio input.
 
         Args:
-            prompt: The input text prompt
+            audio_data: The input audio data (WAV format)
+            text_prompt: Optional text prompt to accompany the audio
 
         Returns:
             Tuple containing:
             - text_response: The full text response
             - metrics: Dictionary of performance metrics
             - audio_data: Audio data if applicable (or None)
-            
+
         Raises:
             ModelGenerationError: If response generation fails
         """
@@ -57,9 +58,9 @@ class BaseModel(ABC):
     async def ensure_initialized(self) -> None:
         """
         Ensure the model is initialized before use.
-        
+
         Calls initialize() if the model is not already initialized.
-        
+
         Raises:
             ModelInitializationError: If initialization fails
         """

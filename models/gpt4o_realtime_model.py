@@ -2,11 +2,13 @@ import time
 import base64
 import asyncio
 import logging
+import io
+import wave
 from typing import Dict, Any, Tuple, Optional, List
 
 from models.base_model import BaseModel
 from utils.exceptions import ModelGenerationError, ModelInitializationError
-from utils.audio_utils import convert_pcm_to_wav, get_wav_duration
+from utils.audio_utils import convert_pcm_to_wav, get_wav_duration, get_mp3_duration
 from utils.client import create_azure_openai_client
 from utils.metrics import calculate_tokens_per_second, create_error_metrics
 from config import (
@@ -22,6 +24,8 @@ class GPT4ORealtimeModel(BaseModel):
     GPT-4o Realtime model implementation.
 
     Uses the GPT-4o Realtime preview deployment for streaming responses with audio.
+
+    Note: Currently, the this benchmark only supports text input and audio output.
     """
 
     def __init__(self):
@@ -44,12 +48,12 @@ class GPT4ORealtimeModel(BaseModel):
             raise ModelInitializationError(
                 f"Failed to initialize GPT-4o Realtime model: {e}") from e
 
-    async def generate_response(self, prompt: str) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
+    async def generate_response_from_audio(self, audio_data: bytes, text_prompt: Optional[str] = None) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
         """
-        Generate a streaming response with audio for the given prompt.
-
+        Generate a response for the given text prompt with streaming audio output.
         Args:
-            prompt: The input text prompt
+            audio_data: The input audio data (WAV format) - not used (yet) for this benchmark 
+            text_prompt: Text prompt to use for the conversation
 
         Returns:
             Tuple containing text response, metrics, and audio data
@@ -93,7 +97,7 @@ class GPT4ORealtimeModel(BaseModel):
                     item={
                         "type": "message",
                         "role": "user",
-                        "content": [{"type": "input_text", "text": prompt}],
+                        "content": [{"type": "input_text", "text": text_prompt}],
                     }
                 )
 
@@ -155,12 +159,12 @@ class GPT4ORealtimeModel(BaseModel):
             raw_audio_data = b"".join(audio_chunks)
 
             # Process audio data
-            audio_data = None
+            audio_output = None
             audio_duration = 0.0
             if raw_audio_data:
-                audio_data = convert_pcm_to_wav(raw_audio_data)
+                audio_output = convert_pcm_to_wav(raw_audio_data)
                 audio_duration = get_wav_duration(
-                    audio_data) if audio_data else 0.0
+                    audio_output) if audio_output else 0.0
 
             # Ensure first_token_time is set
             if first_token_time is None:
@@ -178,27 +182,31 @@ class GPT4ORealtimeModel(BaseModel):
             end_time = time.time()
             metrics = {
                 "model": self.name,
-                "processing_time": end_time - start_time,
-                "time_to_audio_start": first_token_time - start_time,
-                "audio_duration": audio_duration,
-                "token_count": token_count,
-                "total_tokens": total_tokens,
-                "input_tokens": input_tokens,
-                "output_tokens": output_tokens,
-                "audio_chunk_count": len(audio_chunks),
-                "audio_size_bytes": len(audio_data) if audio_data else 0
+                "processing_time": float(end_time - start_time),
+                "time_to_first_token": float(first_token_time - start_time),
+                "time_to_audio_start": float(first_token_time - start_time),
+                "audio_duration": float(audio_duration),
+                "token_count": int(token_count or 0),
+                "total_tokens": int(total_tokens or 0),
+                "input_tokens": int(input_tokens or 0),
+                "output_tokens": int(output_tokens or 0),
+                "audio_chunk_count": int(len(audio_chunks)),
+                "audio_size_bytes": int(len(audio_output) if audio_output else 0)
             }
 
             # Add usage metrics and calculate tokens_per_second
             metrics.update(usage_metrics)
-            metrics["tokens_per_second"] = calculate_tokens_per_second(
-                token_count, metrics["processing_time"]
-            )
+            if token_count > 0:
+                metrics["tokens_per_second"] = float(calculate_tokens_per_second(
+                    token_count, metrics["processing_time"]
+                ))
+            else:
+                metrics["tokens_per_second"] = 0.0
 
             logger.info(
                 f"Generated realtime response in {metrics['processing_time']:.2f}s")
 
-            return text_response, metrics, audio_data
+            return text_response, metrics, audio_output
 
         except Exception as e:
             error_msg = f"Error with GPT-4o Realtime: {str(e)}"
@@ -208,12 +216,12 @@ class GPT4ORealtimeModel(BaseModel):
             if first_token_time is None:
                 first_token_time = start_time
 
-            # Return error metrics
+            # Return error metrics with numeric values to avoid type errors
             error_metrics = create_error_metrics(self.name, e, start_time)
             error_metrics.update({
-                "time_to_audio_start": first_token_time - start_time,
-                "audio_chunk_count": len(audio_chunks),
-                "audio_size_bytes": sum(len(chunk) for chunk in audio_chunks) if audio_chunks else 0,
+                "time_to_audio_start": float(first_token_time - start_time),
+                "audio_chunk_count": int(len(audio_chunks)),
+                "audio_size_bytes": int(sum(len(chunk) for chunk in audio_chunks) if audio_chunks else 0),
             })
 
             return error_msg, error_metrics, None
