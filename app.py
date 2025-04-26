@@ -76,7 +76,7 @@ def create_stacked_latency_chart(metrics_dict: Dict[str, List[Dict[str, Any]]]) 
     try:
         # Prepare data for the stacked chart
         models = []
-        whisper_times = []
+        transcription_times = []
         text_times = []
         tts_times = []
 
@@ -86,7 +86,7 @@ def create_stacked_latency_chart(metrics_dict: Dict[str, List[Dict[str, Any]]]) 
 
             # Calculate averages across iterations
             avg_metrics = {}
-            for key in ['model', 'text_generation_time', 'tts_time', 'time_to_audio_start', 'whisper_time']:
+            for key in ['model', 'text_generation_time', 'tts_time', 'time_to_audio_start', 'whisper_time', 'transcribe_time']:
                 if key == 'model':
                     avg_metrics[key] = metrics_list[0][key]
                 else:
@@ -96,9 +96,11 @@ def create_stacked_latency_chart(metrics_dict: Dict[str, List[Dict[str, Any]]]) 
 
             models.append(avg_metrics['model'])
 
-            # Get whisper_time (transcription time) - use correct keys for different models
-            whisper_time = avg_metrics.get('whisper_time', 0)
-            whisper_times.append(whisper_time)
+            # Get transcription time - use the appropriate metric name based on the model
+            # Some models use whisper_time, others use transcribe_time
+            transcription_time = avg_metrics.get(
+                'transcribe_time', avg_metrics.get('whisper_time', 0))
+            transcription_times.append(transcription_time)
 
             # For text generation time
             if 'Realtime' in avg_metrics['model']:
@@ -110,20 +112,20 @@ def create_stacked_latency_chart(metrics_dict: Dict[str, List[Dict[str, Any]]]) 
                 text_times.append(avg_metrics.get('text_generation_time', 0))
                 tts_times.append(0)  # No separate TTS time
             else:
-                # For models with TTS (Whisper and Azure Speech)
+                # For models with TTS (Sequential processing models)
                 text_times.append(avg_metrics.get('text_generation_time', 0))
                 tts_times.append(avg_metrics.get('tts_time', 0))
 
         # Create the stacked bar chart
         fig = go.Figure()
 
-        # Add Whisper/transcription time bars
+        # Add transcription time bars
         fig.add_trace(go.Bar(
             x=models,
-            y=whisper_times,
+            y=transcription_times,
             name='Transcription Time',
             marker_color='#ff9800',
-            text=[f"{t:.2f}s" if t > 0 else "" for t in whisper_times],
+            text=[f"{t:.2f}s" if t > 0 else "" for t in transcription_times],
             textposition='auto'
         ))
 
@@ -141,7 +143,7 @@ def create_stacked_latency_chart(metrics_dict: Dict[str, List[Dict[str, Any]]]) 
         fig.add_trace(go.Bar(
             x=models,
             y=tts_times,
-            name='TTS Processing Time',
+            name='Speech Synthesis Time',
             marker_color='#ff7f0e',
             text=[f"{t:.2f}s" if t > 0 else "" for t in tts_times],
             textposition='auto'
@@ -266,6 +268,7 @@ def create_enhanced_summary_table(df: pd.DataFrame) -> str:
         # Include model-specific columns if they exist
         optional_columns = {
             'tts_time': 'TTS Processing (s)',
+            'transcribe_time': 'Transcription Time (s)',
             'audio_size_bytes': 'Audio Size (KB)',
         }
 
@@ -514,6 +517,8 @@ async def run_benchmark(
     include_gpt4o_whisper: bool,
     include_azure_speech: bool,
     include_gpt41_mini_whisper: bool,
+    include_gpt4o_minitts_transcribe: bool,
+    include_gpt4o_minitts_mini_transcribe: bool,
     pause_seconds: float = BENCHMARK_PAUSE_SECONDS,
     iteration_pause: float = ITERATION_PAUSE_SECONDS,
     progress=gr.Progress()
@@ -529,6 +534,8 @@ async def run_benchmark(
         include_gpt4o_whisper: Whether to include the GPT-4o + Whisper model
         include_azure_speech: Whether to include the Azure Speech model
         include_gpt41_mini_whisper: Whether to include the GPT-4.1-mini + Whisper model
+        include_gpt4o_minitts_transcribe: Whether to include GPT-4o + GPT-4o-transcribe + GPT-4o-mini-TTS
+        include_gpt4o_minitts_mini_transcribe: Whether to include GPT-4o + GPT-4o-mini-transcribe + GPT-4o-mini-TTS
         pause_seconds: Number of seconds to pause between model benchmarks
         iteration_pause: Number of seconds to pause between iterations
         progress: Gradio progress indicator
@@ -555,9 +562,13 @@ async def run_benchmark(
         selected_models.append("azure_speech")
     if include_gpt41_mini_whisper:
         selected_models.append("gpt41_mini_whisper")
+    if include_gpt4o_minitts_transcribe:
+        selected_models.append("gpt4o_minitts_transcribe")
+    if include_gpt4o_minitts_mini_transcribe:
+        selected_models.append("gpt4o_minitts_mini_transcribe")
 
     if not selected_models:
-        return ("Please select at least one model.", None, None, None, None, None, None, None, None, None)
+        return ("Please select at least one model.", None, None, None, None, None, None, None, None, None, None, None)
 
     logger.info(
         f"Starting audio-to-audio benchmark with {len(selected_models)} models, {iterations} iterations, {pause_seconds}s pause between models")
@@ -610,15 +621,17 @@ async def run_benchmark(
             audio_outputs.get("gpt4o_realtime", None),
             audio_outputs.get("gpt4o_whisper", None),
             audio_outputs.get("azure_speech", None),
-            audio_outputs.get("gpt41_mini_whisper", None)
+            audio_outputs.get("gpt41_mini_whisper", None),
+            audio_outputs.get("gpt4o_minitts_transcribe", None),
+            audio_outputs.get("gpt4o_minitts_mini_transcribe", None)
         )
 
     except BenchmarkError as e:
         logger.error(f"Benchmark error: {e}", exc_info=True)
-        return (f"Benchmark error: {str(e)}", None, None, None, None, None, None, None, None, None)
+        return (f"Benchmark error: {str(e)}", None, None, None, None, None, None, None, None, None, None, None)
     except Exception as e:
         logger.error(f"Unexpected error: {e}", exc_info=True)
-        return (f"An unexpected error occurred: {str(e)}", None, None, None, None, None, None, None, None, None)
+        return (f"An unexpected error occurred: {str(e)}", None, None, None, None, None, None, None, None, None, None)
     finally:
         # Restore original settings
         BENCHMARK_PAUSE_SECONDS = original_pause
@@ -638,7 +651,9 @@ def create_gradio_interface() -> gr.Blocks:
         Compare performance metrics across different GPT-4o model variants:
         - GPT-4o Realtime: Streaming text and audio (currently text-in, audio-out only)
         - GPT-4o Audio Preview: Integrated text and speech in one call
-        - GPT-4o + Whisper + TTS: Sequential text generation and speech synthesis
+        - GPT-4o + Whisper + TTS: Sequential text generation and speech synthesis using OpenAI's TTS
+        - GPT-4o + GPT-4o-transcribe + GPT-4o-mini-tts: Using GPT-4o-transcribe and GPT-4o-mini-tts
+        - GPT-4o + GPT-4o-mini-transcribe + GPT-4o-mini-tts: Using GPT-4o-mini-transcribe and GPT-4o-mini-tts
         - GPT-4.1-mini + Whisper + TTS: Using GPT-4.1-mini for text generation
         - Azure Speech + OpenAI: Using Azure Speech Services for STT and TTS
         """)
@@ -683,13 +698,19 @@ def create_gradio_interface() -> gr.Blocks:
                     include_gpt4o_audio = gr.Checkbox(
                         label="GPT-4o Audio", value=True)
                     include_gpt4o_whisper = gr.Checkbox(
-                        label="GPT-4o + Whisper", value=True)
+                        label="GPT-4o + Whisper + TTS", value=True)
+
+                with gr.Row():
+                    include_gpt4o_minitts_transcribe = gr.Checkbox(
+                        label="GPT-4o + GPT-4o-transcribe + GPT-4o-mini-tts", value=True)
+                    include_gpt4o_minitts_mini_transcribe = gr.Checkbox(
+                        label="GPT-4o + GPT-4o-mini-transcribe + GPT-4o-mini-tts", value=True)
 
                 with gr.Row():
                     include_gpt41_mini_whisper = gr.Checkbox(
-                        label="GPT-4.1-mini + Whisper", value=True)
+                        label="GPT-4.1-mini + Whisper + TTS", value=True)
                     include_azure_speech = gr.Checkbox(
-                        label="Azure Speech", value=True)
+                        label="Azure Speech + OpenAI", value=True)
 
                 run_button = gr.Button("Run Benchmark", variant="primary")
 
@@ -732,14 +753,27 @@ def create_gradio_interface() -> gr.Blocks:
 
                 with gr.Row():
                     with gr.Column():
-                        gr.Markdown("#### GPT-4o + Whisper Sample")
+                        gr.Markdown("#### GPT-4o + Whisper + TTS Sample")
                         gpt4o_whisper_output = gr.Audio(
-                            label="GPT-4o + Whisper", type="filepath")
+                            label="GPT-4o + Whisper + TTS", type="filepath")
 
                     with gr.Column():
-                        gr.Markdown("#### GPT-4.1-mini + Whisper Sample")
+                        gr.Markdown("#### GPT-4.1-mini + Whisper + TTS Sample")
                         gpt41_mini_whisper_output = gr.Audio(
-                            label="GPT-4.1-mini + Whisper", type="filepath")
+                            label="GPT-4.1-mini + Whisper + TTS", type="filepath")
+
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown(
+                            "#### GPT-4o + GPT-4o-transcribe + GPT-4o-mini-tts Sample")
+                        gpt4o_minitts_transcribe_output = gr.Audio(
+                            label="GPT-4o + GPT-4o-transcribe + GPT-4o-mini-tts", type="filepath")
+
+                    with gr.Column():
+                        gr.Markdown(
+                            "#### GPT-4o + GPT-4o-mini-transcribe + GPT-4o-mini-tts Sample")
+                        gpt4o_minitts_mini_transcribe_output = gr.Audio(
+                            label="GPT-4o + GPT-4o-mini-transcribe + GPT-4o-mini-tts", type="filepath")
 
                 with gr.Row():
                     with gr.Column():
@@ -757,6 +791,8 @@ def create_gradio_interface() -> gr.Blocks:
                 include_gpt4o_whisper,
                 include_azure_speech,
                 include_gpt41_mini_whisper,
+                include_gpt4o_minitts_transcribe,
+                include_gpt4o_minitts_mini_transcribe,
                 pause_input,
                 iteration_pause_input
             ],
@@ -770,7 +806,9 @@ def create_gradio_interface() -> gr.Blocks:
                 gpt4o_realtime_output,
                 gpt4o_whisper_output,
                 gpt41_mini_whisper_output,
-                azure_speech_output
+                azure_speech_output,
+                gpt4o_minitts_transcribe_output,
+                gpt4o_minitts_mini_transcribe_output
             ]
         )
 

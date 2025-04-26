@@ -17,41 +17,55 @@ from config import (
     AZURE_OPENAI_ENDPOINT,
     AZURE_OPENAI_API_KEY,
     AZURE_OPENAI_API_VERSION,
-    GPT41_MINI_DEPLOYMENT,
-    TTS_DEPLOYMENT,
-    WHISPER_DEPLOYMENT
+    MINITTS_OPENAI_ENDPOINT,
+    MINITTS_OPENAI_API_KEY,
+    MINITTS_OPENAI_API_VERSION,
+    GPT4O_DEPLOYMENT,
+    GPT4O_MINI_TTS_DEPLOYMENT,
+    GPT4O_TRANSCRIBE_DEPLOYMENT
 )
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 
-class GPT41MiniWhisperModel(BaseModel):
+class GPT4OMiniTTSTranscribeModel(BaseModel):
     """
-    GPT-4.1-mini with Whisper TTS model implementation.
+    GPT-4o with GPT-4o-transcribe and GPT-4o-mini-tts model implementation.
 
-    Uses the GPT-4.1-mini deployment for text generation and Whisper for text-to-speech.
+    Uses the GPT-4o-transcribe deployment for transcription, 
+    GPT-4o for text generation, and GPT-4o-mini-tts for text-to-speech.
     """
 
     def __init__(self):
-        """Initialize the GPT-4.1-mini with Whisper TTS model."""
-        super().__init__("GPT-4.1-mini + Whisper + TTS")
-        self.gpt41_mini_deployment = GPT41_MINI_DEPLOYMENT or "gpt-4.1-mini"
-        self.tts_deployment = TTS_DEPLOYMENT or "tts"
-        self.whisper_deployment = WHISPER_DEPLOYMENT or "whisper"
+        """Initialize the GPT-4o with GPT-4o-transcribe and GPT-4o-mini-tts model."""
+        super().__init__("GPT-4o + GPT-4o-transcribe + GPT-4o-mini-tts")
+        self.gpt4o_deployment = GPT4O_DEPLOYMENT or "gpt-4o"
+        self.tts_deployment = GPT4O_MINI_TTS_DEPLOYMENT or "gpt-4o-mini-tts"
+        self.transcribe_deployment = GPT4O_TRANSCRIBE_DEPLOYMENT or "gpt-4o-transcribe"
+        self.minitts_client = None
 
     async def initialize(self) -> None:
         """
-        Initialize the Azure OpenAI client.
+        Initialize the Azure OpenAI clients.
 
         Raises:
             ModelInitializationError: If client initialization fails
         """
         try:
-            self.client = await create_azure_openai_client(AZURE_OPENAI_API_VERSION)
+            # Initialize standard client for GPT-4o and transcribe
+            self.client = await create_azure_openai_client(AZURE_OPENAI_API_VERSION, use_minitts_endpoint=False)
+
+            # Initialize separate client for mini-TTS if different endpoint is specified
+            if MINITTS_OPENAI_ENDPOINT != AZURE_OPENAI_ENDPOINT or MINITTS_OPENAI_API_KEY != AZURE_OPENAI_API_KEY:
+                logger.info("Using separate endpoint for GPT-4o-mini-tts")
+                self.minitts_client = await create_azure_openai_client(MINITTS_OPENAI_API_VERSION, use_minitts_endpoint=True)
+            else:
+                # Use the same client if endpoints are the same
+                self.minitts_client = self.client
         except Exception as e:
             raise ModelInitializationError(
-                f"Failed to initialize GPT-4.1-mini + Whisper model: {e}") from e
+                f"Failed to initialize GPT-4o + GPT-4o-transcribe + GPT-4o-mini-tts model: {e}") from e
 
     async def _get_tts_headers(self) -> Dict[str, str]:
         """
@@ -66,8 +80,9 @@ class GPT41MiniWhisperModel(BaseModel):
         headers = {'Content-Type': 'application/json'}
 
         try:
-            if AZURE_OPENAI_API_KEY:
-                headers['api-key'] = AZURE_OPENAI_API_KEY
+            # Use the mini-TTS API key if specified
+            if MINITTS_OPENAI_API_KEY:
+                headers['api-key'] = MINITTS_OPENAI_API_KEY
             else:
                 # Use Microsoft Entra ID authentication for TTS
                 credential = DefaultAzureCredential()
@@ -81,7 +96,7 @@ class GPT41MiniWhisperModel(BaseModel):
 
     async def generate_response_from_audio(self, audio_data: bytes, text_prompt: Optional[str] = None) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
         """
-        Generate a response for audio input, with Whisper transcription, GPT-4.1-mini processing, and TTS.
+        Generate a response for audio input, with GPT-4o-transcribe transcription, GPT-4o processing, and mini-TTS.
 
         Args:
             audio_data: The input audio data (WAV format)
@@ -97,27 +112,28 @@ class GPT41MiniWhisperModel(BaseModel):
         start_time = time.time()
 
         try:
-            # Step 1: Transcribe audio with Whisper
-            logger.debug(f"Transcribing audio with {self.whisper_deployment}")
-            whisper_start_time = time.time()
+            # Step 1: Transcribe audio with GPT-4o-transcribe
+            logger.debug(
+                f"Transcribing audio with {self.transcribe_deployment}")
+            transcribe_start_time = time.time()
 
             # Create a buffer for the audio file
             buffer = io.BytesIO(audio_data)
             buffer.name = "audio.wav"
 
-            # Call Whisper for transcription
+            # Call GPT-4o-transcribe for transcription
             transcription_response = await self.client.audio.transcriptions.create(
-                model=self.whisper_deployment,
+                model=self.transcribe_deployment,
                 file=buffer
             )
             buffer.close()
 
             transcription = transcription_response.text
-            whisper_complete_time = time.time()
-            whisper_time = whisper_complete_time - whisper_start_time
+            transcribe_complete_time = time.time()
+            transcribe_time = transcribe_complete_time - transcribe_start_time
 
             logger.debug(
-                f"Transcription completed in {whisper_time:.2f}s: {transcription[:50]}...")
+                f"Transcription completed in {transcribe_time:.2f}s: {transcription[:50]}...")
 
             # Combine transcription with any additional text prompt
             if text_prompt:
@@ -125,13 +141,13 @@ class GPT41MiniWhisperModel(BaseModel):
             else:
                 full_prompt = f"Respond to this transcribed audio: {transcription}"
 
-            # Step 2: Generate text response with GPT-4.1-mini
+            # Step 2: Generate text response with GPT-4o
             logger.debug(
-                f"Generating text response with {self.gpt41_mini_deployment}")
+                f"Generating text response with {self.gpt4o_deployment}")
             gpt_start_time = time.time()
 
             response = await self.client.chat.completions.create(
-                model=self.gpt41_mini_deployment,
+                model=self.gpt4o_deployment,
                 messages=[{"role": "user", "content": full_prompt}],
                 stream=False
             )
@@ -143,7 +159,7 @@ class GPT41MiniWhisperModel(BaseModel):
             logger.debug(
                 f"Text response generated in {gpt_time:.2f}s: {text_response[:50]}...")
 
-            # Step 3: Convert text to speech using TTS
+            # Step 3: Convert text to speech using GPT-4o-mini-tts
             tts_start_time = time.time()
             logger.debug(
                 f"Converting text to speech with {self.tts_deployment}")
@@ -152,10 +168,11 @@ class GPT41MiniWhisperModel(BaseModel):
             headers = await self._get_tts_headers()
 
             # Prepare TTS API request
-            tts_url = f"{AZURE_OPENAI_ENDPOINT}openai/deployments/{self.tts_deployment}/audio/speech?api-version={AZURE_OPENAI_API_VERSION}"
+            tts_url = f"{MINITTS_OPENAI_ENDPOINT}openai/deployments/{self.tts_deployment}/audio/speech?api-version={MINITTS_OPENAI_API_VERSION}"
             tts_body = {
+                "model": self.tts_deployment,
                 "input": text_response,
-                "voice": "nova",
+                "voice": "shimmer",
                 "response_format": "mp3"
             }
 
@@ -183,20 +200,20 @@ class GPT41MiniWhisperModel(BaseModel):
             # Collect metrics with detailed breakdown
             metrics = {
                 "model": self.name,
-                # Whisper transcription metrics
-                "transcribe_time": whisper_time,
+                # Transcription metrics
+                "transcribe_time": transcribe_time,
 
-                # Text generation metrics (the core GPT-4.1-mini part)
+                # Text generation metrics (the core GPT-4o part)
                 "text_generation_time": gpt_time,
 
                 # TTS specific metrics
                 "tts_time": tts_generation_time,
 
                 # Combined metrics (total pipeline)
-                "processing_time": whisper_time + gpt_time + tts_generation_time,
+                "processing_time": transcribe_time + gpt_time + tts_generation_time,
 
                 # Time until audio would start playing (full pipeline)
-                "time_to_audio_start": whisper_time + gpt_time + tts_generation_time,
+                "time_to_audio_start": transcribe_time + gpt_time + tts_generation_time,
 
                 # Actual duration of the generated audio
                 "audio_duration": audio_duration,
@@ -209,18 +226,21 @@ class GPT41MiniWhisperModel(BaseModel):
                 "transcription_length": len(transcription)
             }
 
+            # For consistency with other models that use whisper_time
+            metrics["whisper_time"] = transcribe_time
+
             # Calculate tokens per second based on text generation time only
             metrics["tokens_per_second"] = calculate_tokens_per_second(
                 metrics["token_count"], metrics["text_generation_time"]
             )
 
             logger.info(
-                f"Generated GPT-4.1-mini + Whisper response in {metrics['processing_time']:.2f}s (from audio input)")
+                f"Generated response in {metrics['processing_time']:.2f}s (from audio input)")
 
             return text_response, metrics, audio_data_output
 
         except Exception as e:
-            error_msg = f"Error with GPT-4.1-mini + Whisper (audio input): {str(e)}"
+            error_msg = f"Error with {self.name} (audio input): {str(e)}"
             logger.error(error_msg, exc_info=True)
 
             # Return error metrics
