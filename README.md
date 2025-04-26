@@ -56,7 +56,7 @@ This benchmarking suite captures critical metrics across all GPT-4o audio implem
 The Benchmark results vary dramatically based on the input prompt used. Here is a sample result for the provided default prompt:
 
 <p align="center">
-  <img src="assets/demo.png" alt="Demo of the benchmarking interface" width="600"/>
+  <img src="assets/demo.png" alt="Demo of the benchmarking interface"/>
 </p>
 
 Our interactive Gradio interface allows you to:
