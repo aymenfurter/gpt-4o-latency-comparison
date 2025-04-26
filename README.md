@@ -5,11 +5,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/stargazers"><img src="https://img.shields.io/github/stars/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Stars Badge"/></a>
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/network/members"><img src="https://img.shields.io/github/forks/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Forks Badge"/></a>
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/pulls"><img src="https://img.shields.io/github/issues-pr/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Pull Requests Badge"/></a>
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/issues"><img src="https://img.shields.io/github/issues/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Issues Badge"/></a>
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/blob/main/LICENSE"><img src="https://img.shields.io/github/license/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="License Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/stargazers"><img src="https://img.shields.io/github/stars/aymenfurter/gpt-4o-latency-comparison" alt="Stars Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/network/members"><img src="https://img.shields.io/github/forks/aymenfurter/gpt-4o-latency-comparison" alt="Forks Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/pulls"><img src="https://img.shields.io/github/issues-pr/aymenfurter/gpt-4o-latency-comparison" alt="Pull Requests Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/issues"><img src="https://img.shields.io/github/issues/aymenfurter/gpt-4o-latency-comparison" alt="Issues Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/blob/main/LICENSE"><img src="https://img.shields.io/github/license/aymenfurter/gpt-4o-latency-comparison" alt="License Badge"/></a>
 </p>
 
 <p align="center">
