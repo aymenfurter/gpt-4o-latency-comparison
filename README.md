@@ -5,11 +5,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/stargazers"><img src="https://img.shields.io/github/stars/aymenfurter/gpt-4o-latency-comparison" alt="Stars Badge"/></a>
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/network/members"><img src="https://img.shields.io/github/forks/aymenfurter/gpt-4o-latency-comparison" alt="Forks Badge"/></a>
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/pulls"><img src="https://img.shields.io/github/issues-pr/aymenfurter/gpt-4o-latency-comparison" alt="Pull Requests Badge"/></a>
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/issues"><img src="https://img.shields.io/github/issues/aymenfurter/gpt-4o-latency-comparison" alt="Issues Badge"/></a>
-  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/blob/main/LICENSE"><img src="https://img.shields.io/github/license/aymenfurter/gpt-4o-latency-comparison" alt="License Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/stargazers"><img src="https://img.shields.io/github/stars/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Stars Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/network/members"><img src="https://img.shields.io/github/forks/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Forks Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/pulls"><img src="https://img.shields.io/github/issues-pr/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Pull Requests Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/issues"><img src="https://img.shields.io/github/issues/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="Issues Badge"/></a>
+  <a href="https://github.com/aymenfurter/gpt-4o-latency-comparison/blob/main/LICENSE"><img src="https://img.shields.io/github/license/aymenfurter/gpt-4o-latency-comparison?style=flat-square" alt="License Badge"/></a>
 </p>
 
 <p align="center">
@@ -35,7 +35,10 @@ Azure OpenAI Service now offers multiple ways to implement GPT-4o with audio cap
 
 - **GPT-4o Realtime** - Streaming text and audio responses with minimal latency
 - **GPT-4o Audio Preview** - Integrated text and speech in a single API call
-- **GPT-4o + Whisper TTS** - Sequential text generation and separate speech synthesis
+- **Azure Speech + OpenAI** - Using Azure Speech Services for speech-to-text and text-to-speech
+- **GPT-4o + GPT-4o-transcribe + GPT-4o-mini-tts** - Sequential processing with transcription and mini-tts
+- **GPT-4o + GPT-4o-mini-transcribe + GPT-4o-mini-tts** - Using smaller transcribe model
+- **GPT-4.1-mini + Whisper + TTS** - Alternative implementation based on GPT-4.1-mini model
 
 Each implementation offers different tradeoffs between **latency**, **audio quality**, and **implementation complexity**. This toolkit helps you quantify these differences to choose the best option for your specific use case.
 
@@ -96,6 +99,7 @@ GPT4O_DEPLOYMENT=your-gpt4o-deployment-name
 GPT4O_REALTIME_DEPLOYMENT=your-gpt4o-realtime-preview-deployment-name
 GPT4O_AUDIO_DEPLOYMENT=your-gpt4o-audio-preview-deployment-name
 TTS_DEPLOYMENT=your-tts-deployment-name
+BENCHMARK_PAUSE_TIME=0  # Set the pause time between model tests (in seconds)
 ```
 
 ## Usage
@@ -107,7 +111,10 @@ python app.py
 
 2. Open the URL displayed in the console (typically http://127.0.0.1:7860)
 
-3. Enter a prompt, select the desired models, set the number of iterations, and click "Run Benchmark"
+3. Enter a prompt, select the desired models, set the number of iterations, and configure the pause time between tests
+
+4. Click "Run Benchmark" to start the comparison
+
 
 ## Technical Implementation
 

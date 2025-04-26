@@ -35,7 +35,7 @@ class GPT4OWhisperModel(BaseModel):
 
     def __init__(self):
         """Initialize the GPT-4o with Whisper TTS model."""
-        super().__init__("GPT-4o + Whisper TTS")
+        super().__init__("GPT-4o + Whisper + TTS")
         self.gpt4o_deployment = GPT4O_DEPLOYMENT or "gpt-4o"
         self.tts_deployment = TTS_DEPLOYMENT or "tts"
         self.whisper_deployment = WHISPER_DEPLOYMENT or "whisper"
@@ -184,7 +184,7 @@ class GPT4OWhisperModel(BaseModel):
             metrics = {
                 "model": self.name,
                 # Whisper transcription metrics
-                "whisper_time": whisper_time,
+                "transcribe_time": whisper_time,
 
                 # Text generation metrics (the core GPT-4o part)
                 "text_generation_time": gpt_time,

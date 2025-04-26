@@ -212,7 +212,7 @@ class AzureSpeechModel(BaseModel):
             metrics = {
                 "model": self.name,
                 # STT transcription metrics
-                "whisper_time": stt_time,  # Using whisper_time for consistency with other models
+                "transcribe_time": stt_time,  # Using whisper_time for consistency with other models
 
                 # Text generation metrics
                 "text_generation_time": gpt_time,

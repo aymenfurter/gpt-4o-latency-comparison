@@ -23,6 +23,17 @@ AZURE_OPENAI_API_VERSION = os.getenv(
     "AZURE_OPENAI_API_VERSION", "2025-01-01-preview"
 )
 
+# =========================================
+# Separate Endpoint for GPT-4o-mini-tts
+# =========================================
+MINITTS_OPENAI_ENDPOINT = os.getenv(
+    "MINITTS_OPENAI_ENDPOINT", AZURE_OPENAI_ENDPOINT)
+MINITTS_OPENAI_API_KEY = os.getenv(
+    "MINITTS_OPENAI_API_KEY", AZURE_OPENAI_API_KEY)
+MINITTS_OPENAI_API_VERSION = os.getenv(
+    "MINITTS_OPENAI_API_VERSION", AZURE_OPENAI_API_VERSION
+)
+
 # Validate required configuration
 if not AZURE_OPENAI_ENDPOINT:
     logging.warning("AZURE_OPENAI_ENDPOINT environment variable is not set")
@@ -49,6 +60,14 @@ GPT4O_AUDIO_DEPLOYMENT = os.getenv(
 GPT41_MINI_DEPLOYMENT = os.getenv("GPT41_MINI_DEPLOYMENT", "gpt-4.1-mini")
 WHISPER_DEPLOYMENT = os.getenv("WHISPER_DEPLOYMENT", "whisper")
 TTS_DEPLOYMENT = os.getenv("TTS_DEPLOYMENT", "tts")
+
+# New model deployments
+GPT4O_MINI_TTS_DEPLOYMENT = os.getenv(
+    "GPT4O_MINI_TTS_DEPLOYMENT", "gpt-4o-mini-tts")
+GPT4O_TRANSCRIBE_DEPLOYMENT = os.getenv(
+    "GPT4O_TRANSCRIBE_DEPLOYMENT", "gpt-4o-transcribe")
+GPT4O_MINI_TRANSCRIBE_DEPLOYMENT = os.getenv(
+    "GPT4O_MINI_TRANSCRIBE_DEPLOYMENT", "gpt-4o-mini-transcribe")
 
 # =========================================
 # Benchmark Settings

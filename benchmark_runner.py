@@ -14,6 +14,8 @@ from models.gpt4o_realtime_model import GPT4ORealtimeModel
 from models.gpt4o_whisper_model import GPT4OWhisperModel
 from models.azure_speech_model import AzureSpeechModel
 from models.gpt41_mini_whisper_model import GPT41MiniWhisperModel
+from models.gpt4o_minitts_transcribe_model import GPT4OMiniTTSTranscribeModel
+from models.gpt4o_minitts_mini_transcribe_model import GPT4OMiniTTSMiniTranscribeModel
 
 from utils.exceptions import BenchmarkError
 from config import (
@@ -41,7 +43,9 @@ class BenchmarkRunner:
             "gpt4o_audio": GPT4OAudioModel(),
             "gpt4o_whisper": GPT4OWhisperModel(),
             "azure_speech": AzureSpeechModel(),
-            "gpt41_mini_whisper": GPT41MiniWhisperModel()
+            "gpt41_mini_whisper": GPT41MiniWhisperModel(),
+            "gpt4o_minitts_transcribe": GPT4OMiniTTSTranscribeModel(),
+            "gpt4o_minitts_mini_transcribe": GPT4OMiniTTSMiniTranscribeModel()
         }
         self.results: Dict[str, List[Dict[str, Any]]] = {}
         self.audio_input: Optional[bytes] = None
