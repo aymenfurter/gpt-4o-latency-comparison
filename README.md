@@ -143,11 +143,11 @@ The benchmarking is performed through these key components:
 
 | **Model**                 | **Service**     | **Availability** | **Reference**                                                                                                                           |
 | ------------------------- | --------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `gpt-4o`                  | Azure OpenAI    | ✅ GA             | [link](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)                                                      |
-| `gpt-4.1-mini`            | Azure OpenAI    | ✅ GA             | [link](https://azure.microsoft.com/en-us/blog/announcing-the-gpt-4-1-model-series-for-azure-ai-foundry-developers/)                     |
-| Whisper                   | Azure OpenAI    | ✅ GA             | [link](https://azure.microsoft.com/en-us/blog/accelerate-your-productivity-with-the-whisper-model-in-azure-ai-now-generally-available/) |
-| Real-time speech to text  | Azure AI Speech | ✅ GA             | [link](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-to-text)                                               |
-| Text to speech            | Azure AI Speech | ✅ GA             | [link](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech)                                               |
+| `gpt-4o`                  | Azure OpenAI    | ✅ GA            | [link](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)                                                      |
+| Whisper                   | Azure OpenAI    | ✅ GA            | [link](https://azure.microsoft.com/en-us/blog/accelerate-your-productivity-with-the-whisper-model-in-azure-ai-now-generally-available/) |
+| Real-time speech to text  | Azure AI Speech | ✅ GA            | [link](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-to-text)                                               |
+| Text to speech            | Azure AI Speech | ✅ GA            | [link](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech)                                               |
+| `gpt-4.1-mini`            | Azure OpenAI    | 🧪 Preview (API) | [link](https://azure.microsoft.com/en-us/blog/announcing-the-gpt-4-1-model-series-for-azure-ai-foundry-developers/)                     |
 | `gpt-4o-realtime-preview` | Azure OpenAI    | 🧪 Preview       | [link](https://learn.microsoft.com/en-us/azure/ai-services/openai/realtime-audio-quickstart)                                            |
 | `gpt-4o-audio-preview`    | Azure OpenAI    | 🧪 Preview       | [link](https://learn.microsoft.com/en-us/azure/ai-services/openai/audio-completions-quickstart)                                         |
 | `gpt-4o-transcribe`       | Azure OpenAI    | 🧪 Preview       | [link](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)                                                      |
