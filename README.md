@@ -36,6 +36,7 @@
 Azure OpenAI Service now offers multiple ways to implement GPT-4o with audio capabilities:
 
 * **GPT-4o Realtime** - Streaming text and audio responses with minimal latency
+* **GPT-4o Realtime Mini** - Lighter variant of realtime model with potentially faster response times
 * **GPT-4o Audio Preview** - Integrated text and speech in a single API call
 * **Azure Speech + OpenAI** - Using Azure Speech Services for speech-to-text and text-to-speech
 * **GPT-4o + GPT-4o-transcribe + GPT-4o-mini-tts** - Sequential processing with transcription and mini-tts
