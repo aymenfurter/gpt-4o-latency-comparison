@@ -24,8 +24,6 @@ class GPT4ORealtimeModel(BaseModel):
     GPT-4o Realtime model implementation.
 
     Uses the GPT-4o Realtime preview deployment for streaming responses with audio.
-
-    Note: Currently, the this benchmark only supports text input and audio output.
     """
 
     def __init__(self):
@@ -50,10 +48,10 @@ class GPT4ORealtimeModel(BaseModel):
 
     async def generate_response_from_audio(self, audio_data: bytes, text_prompt: Optional[str] = None) -> Tuple[str, Dict[str, Any], Optional[bytes]]:
         """
-        Generate a response for the given text prompt with streaming audio output.
+        Generate a response for the given audio input with streaming audio output.
         Args:
-            audio_data: The input audio data (WAV format) - not used (yet) for this benchmark 
-            text_prompt: Text prompt to use for the conversation
+            audio_data: The input audio data (WAV format)
+            text_prompt: Optional text prompt to accompany the audio
 
         Returns:
             Tuple containing text response, metrics, and audio data
@@ -88,16 +86,46 @@ class GPT4ORealtimeModel(BaseModel):
                     "output_audio_format": "pcm16"
                 })
 
-                # Record request time and send the user message
+                # Record request time
                 request_time = time.time()
                 logger.debug(
                     f"Request sent at: {request_time - start_time:.3f}s after start")
 
+                # Convert WAV to raw PCM16 if needed
+                pcm_audio_data = audio_data
+
+                # Check if audio_data is WAV format and extract PCM data
+                if audio_data[:4] == b'RIFF':
+                    logger.debug("Detected WAV format, extracting PCM data")
+                    try:
+                        wav_buffer = io.BytesIO(audio_data)
+                        with wave.open(wav_buffer, 'rb') as wav_file:
+                            pcm_audio_data = wav_file.readframes(
+                                wav_file.getnframes())
+                    except Exception as e:
+                        logger.error(f"Failed to extract PCM from WAV: {e}")
+                        # Fall back to using raw data
+                        pcm_audio_data = audio_data
+
+                # Encode audio to base64 for transmission
+                encoded_audio = base64.b64encode(
+                    pcm_audio_data).decode('utf-8')
+
+                # Create content array with audio and optional text
+                content = []
+
+                # Add audio as primary input
+                content.append({
+                    "type": "input_audio",
+                    "audio": encoded_audio
+                })
+
+                # Send the user message with audio (and optionally text)
                 await connection.conversation.item.create(
                     item={
                         "type": "message",
                         "role": "user",
-                        "content": [{"type": "input_text", "text": text_prompt}],
+                        "content": content,
                     }
                 )
 
@@ -123,6 +151,12 @@ class GPT4ORealtimeModel(BaseModel):
                         text_chunks.append(event.delta)
 
                     elif event.type == "response.audio.delta":
+                        # Record first audio time if no text was received
+                        if first_token_time is None:
+                            first_token_time = current_time
+                            logger.debug(
+                                f"First audio received at: {first_token_time - start_time:.3f}s after start")
+
                         # Collect audio chunks
                         audio_data = base64.b64decode(event.delta)
                         audio_chunks.append(audio_data)
@@ -191,7 +225,8 @@ class GPT4ORealtimeModel(BaseModel):
                 "input_tokens": int(input_tokens or 0),
                 "output_tokens": int(output_tokens or 0),
                 "audio_chunk_count": int(len(audio_chunks)),
-                "audio_size_bytes": int(len(audio_output) if audio_output else 0)
+                "audio_size_bytes": int(len(audio_output) if audio_output else 0),
+                "audio_input_size_bytes": int(len(audio_data))
             }
 
             # Add usage metrics and calculate tokens_per_second
@@ -204,7 +239,7 @@ class GPT4ORealtimeModel(BaseModel):
                 metrics["tokens_per_second"] = 0.0
 
             logger.info(
-                f"Generated realtime response in {metrics['processing_time']:.2f}s")
+                f"Generated realtime response in {metrics['processing_time']:.2f}s (from audio input)")
 
             return text_response, metrics, audio_output
 
@@ -222,6 +257,7 @@ class GPT4ORealtimeModel(BaseModel):
                 "time_to_audio_start": float(first_token_time - start_time),
                 "audio_chunk_count": int(len(audio_chunks)),
                 "audio_size_bytes": int(sum(len(chunk) for chunk in audio_chunks) if audio_chunks else 0),
+                "audio_input_size_bytes": int(len(audio_data))
             })
 
             return error_msg, error_metrics, None

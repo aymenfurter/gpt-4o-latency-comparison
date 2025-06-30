@@ -11,6 +11,7 @@ from typing import List, Dict, Any, Tuple, Optional, Set
 from models.base_model import BaseModel
 from models.gpt4o_audio_model import GPT4OAudioModel
 from models.gpt4o_realtime_model import GPT4ORealtimeModel
+from models.gpt4o_realtime_mini_model import GPT4ORealtimeMiniModel
 from models.gpt4o_whisper_model import GPT4OWhisperModel
 from models.azure_speech_model import AzureSpeechModel
 from models.gpt41_mini_whisper_model import GPT41MiniWhisperModel
@@ -40,6 +41,7 @@ class BenchmarkRunner:
         """Initialize the benchmark runner with available models."""
         self.models: Dict[str, BaseModel] = {
             "gpt4o_realtime": GPT4ORealtimeModel(),
+            "gpt4o_realtime_mini": GPT4ORealtimeMiniModel(),
             "gpt4o_audio": GPT4OAudioModel(),
             "gpt4o_whisper": GPT4OWhisperModel(),
             "azure_speech": AzureSpeechModel(),

@@ -54,14 +54,15 @@ GPT4O_DEPLOYMENT = os.getenv("GPT4O_DEPLOYMENT", "gpt-4o")
 GPT4O_REALTIME_DEPLOYMENT = os.getenv(
     "GPT4O_REALTIME_DEPLOYMENT", "gpt-4o-realtime-preview"
 )
+GPT4O_REALTIME_MINI_DEPLOYMENT = os.getenv(
+    "GPT4O_REALTIME_MINI_DEPLOYMENT", "gpt-4o-mini-realtime-preview"
+)
 GPT4O_AUDIO_DEPLOYMENT = os.getenv(
     "GPT4O_AUDIO_DEPLOYMENT", "gpt-4o-audio-preview"
 )
 GPT41_MINI_DEPLOYMENT = os.getenv("GPT41_MINI_DEPLOYMENT", "gpt-4.1-mini")
 WHISPER_DEPLOYMENT = os.getenv("WHISPER_DEPLOYMENT", "whisper")
 TTS_DEPLOYMENT = os.getenv("TTS_DEPLOYMENT", "tts")
-
-# New model deployments
 GPT4O_MINI_TTS_DEPLOYMENT = os.getenv(
     "GPT4O_MINI_TTS_DEPLOYMENT", "gpt-4o-mini-tts")
 GPT4O_TRANSCRIBE_DEPLOYMENT = os.getenv(
