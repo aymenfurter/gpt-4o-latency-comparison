@@ -48,6 +48,15 @@ SPEECH_SYNTHESIS_VOICE = os.getenv(
     "SPEECH_SYNTHESIS_VOICE", "en-US-JennyMultilingualNeural")
 
 # =========================================
+# Azure Voice Live API Configuration
+# =========================================
+VOICE_LIVE_ENDPOINT = os.getenv("VOICE_LIVE_ENDPOINT")
+VOICE_LIVE_API_VERSION = os.getenv(
+    "VOICE_LIVE_API_VERSION", "2025-05-01-preview")
+VOICE_LIVE_MODEL_NAME = os.getenv("VOICE_LIVE_MODEL_NAME", "gpt-4o")
+VOICE_LIVE_KEY = os.getenv("VOICE_LIVE_KEY")
+
+# =========================================
 # Model Deployment Names
 # =========================================
 GPT4O_DEPLOYMENT = os.getenv("GPT4O_DEPLOYMENT", "gpt-4o")

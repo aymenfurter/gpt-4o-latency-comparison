@@ -17,6 +17,7 @@ from models.azure_speech_model import AzureSpeechModel
 from models.gpt41_mini_whisper_model import GPT41MiniWhisperModel
 from models.gpt4o_minitts_transcribe_model import GPT4OMiniTTSTranscribeModel
 from models.gpt4o_minitts_mini_transcribe_model import GPT4OMiniTTSMiniTranscribeModel
+from models.voice_live_model import VoiceLiveModel
 
 from utils.exceptions import BenchmarkError
 from config import (
@@ -43,6 +44,7 @@ class BenchmarkRunner:
             "gpt4o_realtime": GPT4ORealtimeModel(),
             "gpt4o_realtime_mini": GPT4ORealtimeMiniModel(),
             "gpt4o_audio": GPT4OAudioModel(),
+            "voice_live": VoiceLiveModel(),
             "gpt4o_whisper": GPT4OWhisperModel(),
             "azure_speech": AzureSpeechModel(),
             "gpt41_mini_whisper": GPT41MiniWhisperModel(),
@@ -244,6 +246,7 @@ class BenchmarkRunner:
             avg_metrics = {
                 "model": model_name,
                 "processing_time": sum(m.get("processing_time", 0) for m in metrics_list) / metrics_count,
+                "connection_establishment_time": sum(m.get("connection_establishment_time", 0) for m in metrics_list) / metrics_count,
                 "time_to_audio_start": sum(m.get("time_to_audio_start", 0) for m in metrics_list) / metrics_count,
                 "audio_duration": sum(m.get("audio_duration", 0) for m in metrics_list) / metrics_count,
                 "tokens_per_second": sum(m.get("tokens_per_second", 0) for m in metrics_list) / metrics_count,
@@ -259,8 +262,10 @@ class BenchmarkRunner:
             model_specific_keys = self._get_common_metric_keys(metrics_list)
             for key in model_specific_keys:
                 if key not in avg_metrics:
-                    avg_metrics[key] = sum(m.get(key, 0)
-                                           for m in metrics_list) / metrics_count
+                    # Only compute average for numeric values
+                    values = [m.get(key, 0) for m in metrics_list]
+                    if all(isinstance(v, (int, float)) for v in values):
+                        avg_metrics[key] = sum(values) / metrics_count
 
             summary_data.append(avg_metrics)
 

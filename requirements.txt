@@ -9,3 +9,4 @@ numpy>=1.23.0
 azure-identity>=1.15.0
 python-dotenv>=1.0.0
 pydub
+aoihttp
